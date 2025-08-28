@@ -1,0 +1,41 @@
+# Arquivo .gitignore padrão e recomendado para projetos .NET / Visual Studio
+
+## Arquivos específicos do usuário
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Pasta de configurações do Visual Studio
+.vs/
+
+## Resultados de Build (compilação)
+[Bb]in/
+[Oo]bj/
+
+## Arquivos gerados pelo Visual Studio
+*.VC.db
+TestResults/
+*.DotSettings.user
+*.Generated.cs
+
+# Arquivos de IDEs comuns (Rider, VS Code)
+.idea/
+.vscode/
+
+## Arquivos de sistema operacional
+# Windows
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# macOS
+.DS_Store
+
+# Linux
+.swp
+
+# Arquivos de log e temporários
+*.log
+*.tmp
+*.bak

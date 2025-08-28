@@ -1,0 +1,46 @@
+﻿@using InsurancePlatform.WebApp.Services
+@using System.ComponentModel.DataAnnotations
+
+<div class="modal-overlay">
+    <div class="modal-content">
+        <h3>@Title</h3>
+        <hr />
+        <EditForm Model="PropostaModel" OnValidSubmit="OnSaveCallback">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label">Nome do Cliente</label>
+                <InputText class="form-control" @bind-Value="PropostaModel.NomeCliente" />
+                <ValidationMessage For="@(() => PropostaModel.NomeCliente)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Valor do Seguro</label>
+                <InputNumber class="form-control" @bind-Value="PropostaModel.Valor" />
+                <ValidationMessage For="@(() => PropostaModel.Valor)" />
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" @onclick="OnCancelCallback">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EditarPropostaDto PropostaModel { get; set; } = new();
+
+    [Parameter]
+    public string Title { get; set; } = "Formulário";
+
+    [Parameter]
+    public EventCallback<EditarPropostaDto> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task OnSaveCallback() => await OnSave.InvokeAsync(PropostaModel);
+    private async Task OnCancelCallback() => await OnCancel.InvokeAsync();
+}

@@ -1,0 +1,242 @@
+﻿@page "/"
+@using InsurancePlatform.WebApp.Services
+@using InsurancePlatform.WebApp.Shared
+@using Blazored.Toast.Services
+@using Microsoft.JSInterop
+@inject PropostaApiService ApiService
+@inject IToastService ToastService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Dashboard de Propostas</PageTitle>
+
+<div class="card">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="h4 mb-0">Propostas de Seguro</h1>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="d-flex justify-content-end align-items-center">
+                    <div class="input-group me-2" style="max-width: 250px;">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Filtrar por nome..." @bind="_filtroNome" @bind:event="oninput" />
+                    </div>
+                    <button class="btn btn-primary" @onclick="AbrirModalParaCriar">
+                        <i class="bi bi-plus-lg me-1"></i> Nova Proposta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (_propostas == null)
+        {
+            <div class="p-4 text-center"><em>Carregando...</em></div>
+        }
+        else if (!FilteredPropostas.Any())
+        {
+            <div class="p-5 text-center">
+                <h5 class="text-muted">Nenhuma proposta encontrada.</h5>
+                <p>Crie uma nova proposta para começar.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover modern-table mb-0">
+                    <thead>
+                        <tr>
+                            <th @onclick='() => SortTable("Cliente")' style="cursor: pointer;">Cliente ▾</th>
+                            <th>Valor</th>
+                            <th @onclick='() => SortTable("Status")' style="cursor: pointer;">Status ▾</th>
+                            <th>Mensagem</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in FilteredPropostas)
+                        {
+                            <tr>
+                                <td>@p.NomeCliente</td>
+                                <td>@p.Valor.ToString("C")</td>
+                                <td><span class="badge status-dot @GetStatusClass(p.Status)">@p.Status</span></td>
+                                <td class="text-muted fst-italic">
+                                    @if (p.Status == "Rejeitada")
+                                    {
+                                        @p.MotivoRecusa
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (p.Status == "EmAnalise")
+                                    {
+                                        <button class="btn btn-light btn-sm btn-icon" title="Editar" @onclick="() => AbrirModalParaEditar(p)"><i class="bi bi-pencil-fill"></i></button>
+                                        <button class="btn btn-light btn-sm btn-icon" title="Aprovar" @onclick="() => AprovarProposta(p.Id, p.NomeCliente)"><i class="bi bi-check-lg"></i></button>
+                                        <button class="btn btn-light btn-sm btn-icon" title="Recusar" @onclick="() => RejeitarProposta(p.Id, p.NomeCliente)"><i class="bi bi-x-lg"></i></button>
+                                    }
+                                    @if (p.Status == "Aprovada")
+                                    {
+                                        <button class="btn btn-light btn-sm btn-icon" title="Editar" @onclick="() => AbrirModalParaEditar(p)"><i class="bi bi-pencil-fill"></i></button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@if (_exibirModal)
+{
+    <PropostaModal Title="@_modalTitle"
+                   PropostaModel="_propostaEmEdicao"
+                   OnSave="SalvarProposta"
+                   OnCancel="FecharModal" />
+}
+
+@code {
+    private List<PropostaDto>? _propostas;
+    private bool _exibirModal = false;
+    private string _modalTitle = "";
+    private PropostaDto? _propostaOriginal;
+    private EditarPropostaDto _propostaEmEdicao = new();
+
+    // Variáveis para filtro e ordenação
+    private string _filtroNome = "";
+    private string _sortBy = "Cliente";
+    private bool _sortAsc = true;
+
+    // Propriedade calculada para filtrar e ordenar a lista
+    private IEnumerable<PropostaDto> FilteredPropostas
+    {
+        get
+        {
+            if (_propostas == null) return Enumerable.Empty<PropostaDto>();
+
+            var query = _propostas.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_filtroNome))
+            {
+                query = query.Where(p => p.NomeCliente.Contains(_filtroNome, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_sortBy == "Cliente")
+            {
+                query = _sortAsc ? query.OrderBy(p => p.NomeCliente) : query.OrderByDescending(p => p.NomeCliente);
+            }
+            else if (_sortBy == "Status")
+            {
+                query = _sortAsc ? query.OrderBy(p => p.Status) : query.OrderByDescending(p => p.Status);
+            }
+
+            return query;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarPropostas();
+    }
+
+    private async Task CarregarPropostas()
+    {
+        _propostas = await ApiService.GetPropostasAsync();
+    }
+
+    private void AbrirModalParaCriar()
+    {
+        _modalTitle = "Nova Proposta";
+        _propostaOriginal = null;
+        _propostaEmEdicao = new EditarPropostaDto();
+        _exibirModal = true;
+    }
+
+    private void AbrirModalParaEditar(PropostaDto proposta)
+    {
+        _modalTitle = "Editar Proposta";
+        _propostaOriginal = proposta;
+        _propostaEmEdicao = new EditarPropostaDto { NomeCliente = proposta.NomeCliente, Valor = proposta.Valor };
+        _exibirModal = true;
+    }
+
+    private void FecharModal() => _exibirModal = false;
+
+    private async Task SalvarProposta(EditarPropostaDto propostaParaSalvar)
+    {
+        try
+        {
+            if (_propostaOriginal is null) // Modo de Criação
+            {
+                await ApiService.CreatePropostaAsync(propostaParaSalvar);
+                ToastService.ShowSuccess("Proposta criada com sucesso!");
+            }
+            else // Modo de Edição
+            {
+                await ApiService.UpdatePropostaAsync(_propostaOriginal.Id, propostaParaSalvar);
+                ToastService.ShowSuccess("Proposta atualizada com sucesso!");
+            }
+
+            FecharModal();
+            await CarregarPropostas();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Erro ao salvar proposta: {ex.Message}");
+        }
+    }
+
+    private async Task AprovarProposta(Guid id, string nomeCliente)
+    {
+        try
+        {
+            await ApiService.ApprovePropostaAsync(id);
+            ToastService.ShowSuccess($"Proposta de {nomeCliente} aprovada!");
+            await CarregarPropostas();
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError($"Erro ao aprovar proposta: {ex.Message}");
+        }
+    }
+
+    private async Task RejeitarProposta(Guid id, string nomeCliente)
+    {
+        var motivo = await JSRuntime.InvokeAsync<string>("prompt", "Por favor, insira o motivo da recusa:");
+
+        if (!string.IsNullOrWhiteSpace(motivo))
+        {
+            try
+            {
+                await ApiService.RejectPropostaAsync(id, new RejeitarPropostaDto(motivo));
+                ToastService.ShowSuccess($"Proposta de {nomeCliente} rejeitada.");
+                await CarregarPropostas();
+            }
+            catch (Exception ex)
+            {
+                ToastService.ShowError($"Erro ao rejeitar proposta: {ex.Message}");
+            }
+        }
+    }
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Aprovada" => "bg-success",
+        "Rejeitada" => "bg-danger",
+        "EmAnalise" => "bg-warning text-dark",
+        _ => "bg-secondary"
+    };
+
+    private void SortTable(string columnName)
+    {
+        if (_sortBy == columnName)
+        {
+            _sortAsc = !_sortAsc;
+        }
+        else
+        {
+            _sortBy = columnName;
+            _sortAsc = true;
+        }
+    }
+}

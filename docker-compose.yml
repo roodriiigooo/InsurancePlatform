@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  proposta-db:
+    build: ./sqlserver-config
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "yourStrong(!)Password"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'yourStrong(!)Password' -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 10s
+      timeout: 3s
+    networks:
+      - insurance-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - insurance-net
+
+  propostaservice:
+    build:
+      context: .
+      dockerfile: PropostaService.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - "ConnectionStrings__DefaultConnection=Server=proposta-db;Database=propostas_db;User Id=sa;Password=yourStrong(!)Password;TrustServerCertificate=True"
+      - RUNNING_IN_CONTAINER=true
+      - MassTransit__RabbitMqHost=rabbitmq
+    depends_on:
+      proposta-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - insurance-net
+
+  contratacaoservice:
+    build:
+      context: .
+      dockerfile: ContratacaoService.Api/Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - "ConnectionStrings__DefaultConnection=Server=proposta-db;Database=propostas_db;User Id=sa;Password=yourStrong(!)Password;TrustServerCertificate=True"
+      - RUNNING_IN_CONTAINER=true
+      - MassTransit__RabbitMqHost=rabbitmq
+    depends_on:
+      proposta-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - insurance-net
+
+  webapp:
+    build:
+      context: . 
+      dockerfile: InsurancePlatform.WebApp/Dockerfile 
+    ports:
+      - "8082:80" 
+    environment:
+      - ApiBaseUrl=http://localhost:8080
+    depends_on:
+      - propostaservice
+    networks:
+      - insurance-net
+
+volumes:
+  sqlserver-data:
+
+networks:
+  insurance-net:
+    driver: bridge

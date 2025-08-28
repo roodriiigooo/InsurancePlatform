@@ -1,0 +1,192 @@
+/* :root define nossas variáveis de design para reuso */
+:root {
+    --primary-color: #0052CC; /* Azul corporativo */
+    --primary-hover: #0041A3;
+    --success-color: #47b590;
+    --danger-color: #7a2712;
+    --warning-color: #bd974a;
+    --neutral-bg: #F4F5F7;
+    --border-color: #DFE1E6;
+    --text-primary: #172B4D;
+    --text-secondary: #6B778C;
+    --font-family-sans-serif: 'Inter', sans-serif;
+    --border-radius: 6px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+html, body {
+    font-family: var(--font-family-sans-serif);
+    background-color: var(--neutral-bg);
+    color: var(--text-primary);
+}
+
+h1 {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    background-color: #fff;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    .table th {
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid var(--border-color) !important;
+    }
+
+    .table td {
+        vertical-align: middle;
+        color: var(--text-primary);
+    }
+
+    .table tbody tr:hover {
+        background-color: var(--neutral-bg);
+    }
+
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    font-size: .8rem;
+}
+
+    .badge.status-dot {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+    }
+
+        .badge.status-dot::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+    .badge.bg-success::before {
+        background-color: var(--success-color);
+    }
+
+    .badge.bg-danger::before {
+        background-color: var(--danger-color);
+    }
+
+    .badge.bg-warning::before {
+        background-color: var(--warning-color);
+    }
+
+.btn {
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+    }
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(23, 43, 77, 0.6) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 9999 !important; 
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 500px;
+    box-shadow: var(--shadow-md);
+    animation: slideUp 0.4s ease-out;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+
+.input-group-text {
+    background-color: #fff;
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+}
+
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgb(0 82 204 / 25%);
+        border-color: var(--primary-color);
+    }

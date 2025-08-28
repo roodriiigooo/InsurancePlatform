@@ -1,0 +1,19 @@
+[
+  {
+    "Name": "Services",
+    "Projects": [
+      {
+        "Path": "PropostaService.Api\\PropostaService.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "ContratacaoService.Api\\ContratacaoService.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "InsurancePlatform.WebApp\\InsurancePlatform.WebApp.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
