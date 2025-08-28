@@ -135,8 +135,8 @@ O projeto está organizado da seguinte forma:
 **Primeiro clone o repositório**
 
 ```powershell
-git clone <url-do-seu-repositorio>
-cd <nome-do-repositorio>
+git clone https://github.com/roodriiigooo/InsurancePlatform.git
+cd InsurancePlatform
 ```
 
 
