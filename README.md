@@ -152,7 +152,7 @@ cd InsurancePlatform
     O comando `--build` garante que as imagens Docker para os seus serviços serão construídas. Na primeira vez, isso pode levar alguns minutos.
 
 2.  **Acesse os Serviços**
-    Após a conclusão do build e a inicialização dos contêineres, os serviços estarão disponíveis nos seguintes endereços:
+após a conclusão do build e a inicialização dos contêineres, os serviços estarão disponíveis nos seguintes endereços:
 
     * 🌐 **Aplicação Web (Frontend)**: [http://localhost:8082](http://localhost:8082)
     * ⚙️ **API do PropostaService**: [http://localhost:8080](http://localhost:8080) / [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html) 
@@ -177,8 +177,18 @@ docker-compose up -d proposta-db rabbitmq
    - Marque "Vários projetos de inicialização".
    - Defina a Ação como "Iniciar" para os três projetos: `PropostaService.Api`, `ContratacaoService.Api` e `InsurancePlatform.WebApp`.
 4. **Execute**: Pressione `F5` ou o botão "`Iniciar`". O Visual Studio irá compilar e iniciar os três projetos.
-   - A WebApp estará acessível no seu endereço de debug (ex: https://localhost:7189).
-   - A API do PropostaService estará no seu endereço de debug (ex: https://localhost:7999).
+
+5.  **Acesse os Serviços**
+após a conclusão do build e a inicialização dos contêineres, os serviços estarão disponíveis nos seguintes endereços:
+
+    * 🌐 **Aplicação Web (Frontend)**: [http://localhost:8082](http://localhost:7189)
+    * ⚙️ **API do PropostaService**: [http://localhost:8080](http://localhost:7999) / [http://localhost:7999/swagger/index.html](http://localhost:7999/swagger/index.html) 
+	* ⚙️ **API do ContratacoService**: [http://localhost:8081](http://localhost:7285) / [http://localhost:8081/swagger/index.html](http://localhost:7285/swagger/index.html) 
+    * 🐇 **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) (login: `guest` / senha: `guest`)
+
+> A WebApp estará acessível no seu endereço de debug (ex: https://localhost:7189).
+> A API do PropostaService estará no seu endereço de debug (ex: https://localhost:7999).
+> A API do ContratacaoService estará no seu endereço de debug (ex: https://localhost:7285).
 
 
 # :page_with_curl: Como Executar os Testes Unitários
@@ -188,5 +198,12 @@ Para rodar a suíte de testes unitários, execute o seguinte comando na raiz do 
 dotnet test
 ```
 ou no `Visual Studio`, vá em `Teste` > `Executar todos os Testes`
+
+
+# :art: Screenshots
+![WebApp](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_WebAPP.PNG?raw=true)
+![Testes](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_tests.PNG?raw=true)
+![PropostaService.Api](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_PropostaServiceAPI_swagger.PNG?raw=true)
+![ContratacaoService.Api](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_ContratacaoServiceAPI_swagger.PNG?raw=true)
 
 
