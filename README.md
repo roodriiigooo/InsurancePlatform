@@ -86,6 +86,14 @@ flowchart TD
     style Infra fill:#fbe9e7,stroke:#333,stroke-width:2px
 ```
 
+<details>
+	<summary> Se não for possivel visualizar o diagrama, clique aqui</summary>
+
+![Diagrama da Arquitetura Final](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_Mermaid_Chart-2025-08-28-183320.png?raw=true)
+
+ 
+</details>
+
 
 ## :books: Pré-requisitos
 
