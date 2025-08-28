@@ -97,7 +97,8 @@ flowchart TD
 
 ## :books: Pré-requisitos
 
-Para executar este projeto, você precisará ter instalado:
+> [!IMPORTANT]
+> Para executar este projeto, você precisará ter instalado:
 
 * [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 * [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (ou outra IDE de sua preferência)
@@ -149,6 +150,7 @@ cd InsurancePlatform
 
 
 ## :bookmark_tabs: **Opção 1**: Ambiente Completo com Docker Compose
+> [!TIP]
 > A maneira mais simples e recomendada de executar toda a stack é utilizando Docker Compose.
 
 
@@ -170,6 +172,7 @@ após a conclusão do build e a inicialização dos contêineres, os serviços e
 
 
 ## :bookmark_tabs: **Opção 2**: Ambiente Híbrido (Debug com Visual Studio)
+> [!TIP]
 > Esta abordagem é ideal para o desenvolvimento e depuração do código .NET.
 
 
@@ -189,11 +192,12 @@ docker-compose up -d proposta-db rabbitmq
 5.  **Acesse os Serviços**
 após a conclusão do build e a inicialização dos contêineres, os serviços estarão disponíveis nos seguintes endereços:
 
-    * 🌐 **Aplicação Web (Frontend)**: [http://localhost:8082](http://localhost:7189)
-    * ⚙️ **API do PropostaService**: [http://localhost:8080](http://localhost:7999) / [http://localhost:7999/swagger/index.html](http://localhost:7999/swagger/index.html) 
-	* ⚙️ **API do ContratacoService**: [http://localhost:8081](http://localhost:7285) / [http://localhost:8081/swagger/index.html](http://localhost:7285/swagger/index.html) 
+    * 🌐 **Aplicação Web (Frontend)**: [http://localhost:7189](http://localhost:7189)
+    * ⚙️ **API do PropostaService**: [http://localhost:7999](http://localhost:7999) / [http://localhost:7999/swagger/index.html](http://localhost:7999/swagger/index.html) 
+	* ⚙️ **API do ContratacoService**: [http://localhost:7285](http://localhost:7285) / [http://localhost:7285/swagger/index.html](http://localhost:7285/swagger/index.html) 
     * 🐇 **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) (login: `guest` / senha: `guest`)
 
+> [!NOTE]
 > A WebApp estará acessível no seu endereço de debug (ex: https://localhost:7189).
 > A API do PropostaService estará no seu endereço de debug (ex: https://localhost:7999).
 > A API do ContratacaoService estará no seu endereço de debug (ex: https://localhost:7285).
