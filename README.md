@@ -201,9 +201,45 @@ ou no `Visual Studio`, vá em `Teste` > `Executar todos os Testes`
 
 
 # :art: Screenshots
+<details>
+	<summary># 1. WebApp</summary>
+
+ 
 ![WebApp](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_WebAPP.PNG?raw=true)
+
+
+</details>
+
+<details>
+	<summary># 2. Testes</summary>
+
+ 
 ![Testes](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_tests.PNG?raw=true)
+
+
+</details>
+
+ 
+<details>
+	<summary># 3. PropostaService.Api</summary>
+ 
 ![PropostaService.Api](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_PropostaServiceAPI_swagger.PNG?raw=true)
+
+
+</details>
+
+
+ 
+<details>
+	<summary># 4. ContratacaoService.Api</summary>
+
+
 ![ContratacaoService.Api](https://github.com/roodriiigooo/InsurancePlatform/blob/main/.assets/_ContratacaoServiceAPI_swagger.PNG?raw=true)
+
+
+</details>
+
+
+
 
 
