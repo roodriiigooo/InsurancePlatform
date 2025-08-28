@@ -22,12 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ContratacaoService.Application\ContratacaoService.Application.csproj" />
-    <ProjectReference Include="..\PropostaService.Domain\PropostaService.Domain.csproj" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <ProjectReference Include="..\ContratacaoService.Application\ContratacaoService.Application.csproj" />
+    <ProjectReference Include="..\ContratacaoService.Domain\ContratacaoService.Domain.csproj" />
   </ItemGroup>
 
 </Project>

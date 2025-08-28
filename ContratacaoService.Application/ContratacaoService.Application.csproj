@@ -7,12 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="MassTransit" Version="8.5.2" />
+    <PackageReference Include="MediatR" Version="13.0.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ContratacaoService.Domain\ContratacaoService.Domain.csproj" />
     <ProjectReference Include="..\InsurancePlatform.Contracts\InsurancePlatform.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DTO\" />
   </ItemGroup>
 
 </Project>

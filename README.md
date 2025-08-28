@@ -25,6 +25,9 @@ O projeto permite criar e gerenciar propostas de seguro. Quando uma proposta é 
 ````
 
 
+Keywords: `Microserviços` `Arquitetura Hexagonal` `DDD` `CQRS` `MediatR` `C#` `.NET 8` `ASP.NET Core` `APIs REST` `Blazor WebAssembly (Standalone)` `Entity Framework Core` `Dapper` `Mensageria` `RabbitMQ` `MassTransit` `SQL Server` `Migrations` `xUnit` `Teste unitário` `FluentAssertions` `Moq` `Docker` `Docker Compose`
+
+
 ## :books: Arquitetura e Tecnologias
 
 A solução é composta por uma aplicação web e dois microserviços de backend, orquestrados para rodar em contêineres `Docker`.
@@ -36,7 +39,7 @@ A solução é composta por uma aplicação web e dois microserviços de backend
     * **`EF Core`**: Para o lado de escrita (Commands), garantindo consistência e regras de negócio.
     * **`Dapper`**: Para o lado de leitura (Queries), garantindo máxima performance.
 * **Mensageria**: `RabbitMQ` para comunicação assíncrona entre os serviços, `MassTransit` (abstração para mensageria no .NET).
-* **Banco de Dados**: `SQL Server`.
+* **Banco de Dados**: `SQL Server` com uso de `Migrations`.
 * **Testes**: `xUnit` (framework de testes), `FluentAssertions` (para asserções legíveis), `Moq` (para mocking de dependências)
 * **Containerização**: `Docker` e `Docker Compose`.
 
@@ -144,7 +147,7 @@ cd <nome-do-repositorio>
 1.  **Inicie os contêineres**
     Na raiz do projeto (onde o arquivo `docker-compose.yml` está localizado), execute o seguinte comando:
     ```powershell
-    docker-compose up --build
+    docker-compose up --build -d
     ```
     O comando `--build` garante que as imagens Docker para os seus serviços serão construídas. Na primeira vez, isso pode levar alguns minutos.
 
@@ -153,9 +156,9 @@ cd <nome-do-repositorio>
 
     * 🌐 **Aplicação Web (Frontend)**: [http://localhost:8082](http://localhost:8082)
     * ⚙️ **API do PropostaService**: [http://localhost:8080](http://localhost:8080) / [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html) 
+	* ⚙️ **API do ContratacoService**: [http://localhost:8081](http://localhost:8081) / [http://localhost:8081/swagger/index.html](http://localhost:8081/swagger/index.html) 
     * 🐇 **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) (login: `guest` / senha: `guest`)
 
-    O `ContratacaoService` não expõe uma API pública, ele apenas processa mensagens em segundo plano. O banco de dados PostgreSQL estará acessível na porta `5432` para o host, caso precise se conectar com uma ferramenta de gerenciamento.
 
 
 ## :bookmark_tabs: **Opção 2**: Ambiente Híbrido (Debug com Visual Studio)
