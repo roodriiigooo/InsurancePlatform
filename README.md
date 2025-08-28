@@ -181,7 +181,7 @@ docker-compose up -d proposta-db rabbitmq
 
 2. **Abra no Visual Studio**: Abra o arquivo `InsurancePlatform.sln` no `Visual Studio`.
 3. **Configure a Inicialização Múltipla:**
-   - Clique com o botão direito na Solução > "**efinir Projetos de Inicialização...**"
+   - Clique com o botão direito na Solução > "**Definir Projetos de Inicialização...**"
    - Marque "Vários projetos de inicialização".
    - Defina a Ação como "Iniciar" para os três projetos: `PropostaService.Api`, `ContratacaoService.Api` e `InsurancePlatform.WebApp`.
 4. **Execute**: Pressione `F5` ou o botão "`Iniciar`". O Visual Studio irá compilar e iniciar os três projetos.
