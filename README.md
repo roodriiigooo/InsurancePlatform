@@ -114,6 +114,110 @@ graph TD
 </details>
 
 
+
+## Descricão geral do projeto
+
+
+📌 O que é o sistema?
+
+O sistema é uma aplicação distribuída para gestão de propostas e contratações.
+Ele é composto por dois serviços principais (`PropostaService` e `ContratacaoService`) que interagem via mensageria (`RabbitMQ`) e usam um banco de dados SQL Server como persistência compartilhada.
+
+A ideia central:
+O usuário (via `Swagger`, `Postman` ou `WebApp`) faz requisições para criar, aprovar ou consultar propostas.
+As propostas geram eventos que disparam um fluxo de contratação assíncrono, tratado por outro serviço.
+
+📌 Arquitetura geral
+
+O sistema segue princípios de arquitetura em camadas e comunicação assíncrona.
+Temos três blocos principais:
+
+	 1. Cliente (Swagger / Postman / WebApp)
+ 		- Onde o usuário interage via requisições HTTP.
+   		- Pode ser um sistema externo, um frontend ou ferramenta de testes.
+	 2. Serviços de Negócio
+  		- PropostaService (porta 8080)
+			- Camada exposta via API REST.
+   			- Responsável por criar, aprovar e consultar propostas.
+	  		- Usa MediatR para aplicar o padrão CQRS (separação de comandos e queries).
+	 		  - Commands (handlers de escrita) → usam EF Core para salvar/alterar propostas.
+	  		  - Queries (handlers de leitura) → usam Dapper para consultas otimizadas.
+	   		- Quando ocorre uma alteração relevante (ex: aprovação de proposta), um evento é publicado via MassTransit para o RabbitMQ.
+	    - ContratacaoService (Worker)
+	 		- Expõe API HTTP (para melhor visualização), porém é um serviço background (worker).
+			- Consome eventos do RabbitMQ (ex: "PropostaAprovada").
+   			- Processa a lógica de contratação usando EF Core.
+	  		- Persiste as informações de contratação no mesmo SQL Server.
+	 3. Infraestrutura Compartilhada
+  		- Banco de Dados (SQL Server)
+			- Usado tanto para propostas quanto para contratações.
+   		- RabbitMQ
+	 		- Fila "contratacao-queue" que transporta mensagens/eventos entre os serviços.
+
+📌 Fluxo resumido (exemplo: criar e aprovar proposta):
+
+- O usuário envia uma requisição `HTTP` (`POST` /propostas).
+- A `API REST` (`Controller`) recebe e envia o comando ao Mediator.
+- O Mediator encaminha para o handler de Command (`EF Core`) que grava a proposta no banco.
+- Quando a proposta é aprovada, o handler dispara um evento para o Publisher (`MassTransit`).
+- O Publisher envia o evento para o `RabbitMQ`.
+- O Consumer (`ContratacaoService`) recebe a mensagem.
+- O ContratacaoService executa a lógica de contratação e grava no banco (`EF Core`).
+- O fluxo se conclui de forma assíncrona, sem bloquear a experiência do usuário.
+
+
+📌 Padrões e boas práticas aplicadas
+
+`CQRS` (Command Query Responsibility Segregation):
+- Separação clara entre operações de escrita (`Commands + EF Core`) e leitura (`Queries + Dapper`).
+
+Mediator Pattern (via `MediatR`):
+- Evita que os Controllers chamem diretamente os handlers, centralizando a orquestração.
+
+`Event-driven Architecture` (`EDA`):
+- A contratação é disparada por eventos publicados no `RabbitMQ`, promovendo baixo acoplamento entre serviços.
+
+`MassTransit`:
+- Abstrai a comunicação com o `RabbitMQ`, simplificando publicação e consumo de mensagens.
+
+Banco relacional centralizado (`SQL Server`):
+- Usado como persistência confiável, tanto para propostas quanto contratações.
+
+
+📌 Benefícios dessa arquitetura
+
+Escalabilidade:
+- O PropostaService pode escalar horizontalmente para atender mais requisições HTTP.
+- O ContratacaoService pode escalar para consumir mais mensagens da fila.
+
+Resiliência:
+- Se o ContratacaoService estiver fora do ar, as mensagens ficam retidas no RabbitMQ até ele voltar.
+
+Separação de responsabilidades:
+- PropostaService → gestão de propostas.
+- ContratacaoService → fluxo de contratação.
+
+Flexibilidade:
+- Fácil adicionar novos consumidores de eventos no futuro (ex: faturamento, notificação, auditoria).
+
+
+👉 Em resumo:
+O sistema é uma aplicação orientada a eventos, que aplica CQRS para manipulação de dados e usa RabbitMQ + MassTransit para integração assíncrona entre serviços. Ele garante desacoplamento, escalabilidade e manutenibilidade, sendo ideal para cenários de alto volume de propostas e contratações.
+
+
+
+📌 Fluxo narrado
+- O usuário chama `POST` `/api/propostas` → cria proposta pendente no banco.
+- O usuário chama `POST` `/api/propostas/{id}/aprovar`.
+- O handler muda status para "Aprovada".
+- Publica evento PropostaAprovadaEvent no `RabbitMQ`.
+- O ContratacaoService consome o evento da fila.
+- Cria uma nova Contratação no banco.
+- Se o usuário quiser consultar, chama `GET` `/api/propostas` e o `Dapper` retorna os registros.
+
+
+
+
 ## :books: Pré-requisitos
 
 > [!IMPORTANT]
