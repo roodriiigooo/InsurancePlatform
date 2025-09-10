@@ -335,6 +335,109 @@ dotnet test
 ou no `Visual Studio`, vá em `Teste` > `Executar todos os Testes`
 
 
+# :page_with_curl: Pipeline Ci/CD (Github Actions - Para AWS e AZURE)
+
+
+#### 1. AWS
+
+> [!NOTE]
+> Esta sessão descreve um pipeline completo e robusto usando `GitHub Actions` que consome serviços `AWS`.
+
+Este pipeline irá automaticamente:
+- Executar os testes para garantir a qualidade do código.
+- Construir as imagens `Docker` de cada microserviço que foi modificado.
+- Enviar as imagens para um registro de contêineres na `AWS` (`Amazon ECR`).
+- Implantar (fazer o deploy) de nova versões de serviço na `AWS` (`Amazon ECS`) sem interrupção.
+
+
+### Fase 1: Preparando a Pista de Pouso na AWS (Configuração Única)
+
+Antes de rodar o pipeline, precisamos configurar os serviços na `AWS` que receberão nossa aplicação. Esta configuração é feita apenas uma vez.
+
+|Passo  	     | Ação na AWS                   | Propósito                   |
+|----------------|-------------------------------|-----------------------------|
+|1. Repositório de Imagens| No serviço `Amazon ECR` (`Elastic Container Registry`), crie três repositórios privados. Dê a eles nomes simples, como: propostaservice, contratacaoservice, webapp. |Será o "depósito" onde o `GitHub Actions` guardará as imagens `Docker` de cada um dos seus serviços.|
+|2. Cluster de Contêineres| No serviço `Amazon ECS` (`Elastic Container Service`), crie um novo Cluster. Escolha o modelo "Somente Rede" (`Networking only`), que é a base para o `Fargate`. | É o "condomínio" onde nossos contêineres irão rodar. |
+|3. "Plantas" dos Contêineres| No `ECS`, vá em "`Task Definitions`" e crie uma "`Task Definition`" para cada um dos seus três serviços (`propostaservice`, `contratacaoservice`, `webapp`). Configure o uso de CPU/Memória e aponte para a imagem no `ECR`. | A "`Task Definition`" é a planta baixa do seu contêiner: diz quanta memória ele precisa, qual imagem usar, etc. |
+|4. Serviços em Execução | No `ECS`, dentro do seu cluster, crie um Serviço para cada "`Task Definition`". Configure-o para usar o tipo de inicialização `FARGATE` e associe-o a um Load Balancer se necessário (para o propostaservice). | O "Serviço" é o que garante que seu contêiner esteja sempre rodando. Se ele falhar, o serviço o reinicia automaticamente. |
+|5. Usuário de Automação | No serviço `IAM` (`Identity and Access Management`), crie um novo Usuário. Marque a opção "`Access key - Programmatic access`". Dê a ele permissões para interagir com `ECR` e `ECS`. Guarde a `Access Key ID` e a `Secret Access Key` em um local seguro. | Este será o "robô" que o GitHub Actions usará para se autenticar na sua conta AWS e poder enviar as imagens e atualizar os serviços. |
+
+
+### Fase 2: Configurando os Segredos no GitHub
+
+> [!IMPORTANT]
+> **NUNCA** coloque suas chaves da AWS diretamente no código, para isso, usar o gerenciador de segredos do GitHub.
+
+1. Vá para o seu repositório/fork no GitHub.
+2. Clique em "`Settings`" > "`Secrets and variables`" > "`Actions`".
+3. Clique em "`New repository secret`" e crie os dois segredos a seguir:
+	- Nome: `AWS_ACCESS_KEY_ID`
+ 	- Valor: Cole a `Access Key ID` do usuário `IAM` que você criou.
+  	- Nome: `AWS_SECRET_ACCESS_KEY`
+   	- Valor: Cole a Secret Access Key do usuário `IAM`.
+
+
+### Fase 3: Os Arquivos de Pipeline (Workflows)
+> A melhor prática para um monorepo é ter um arquivo de workflow para cada serviço, assim, uma alteração no `PropostaService` não aciona o pipeline do `WebApp`.
+
+Na raiz do projeto, há uma pasta chamada `.github` e, dentro dela, uma pasta chamada `workflows`. Três arquivos YAML foram gerados dentro de `.github/workflows`: `ContratacaoService_AWS.yaml`, `PropostaService_AWS.yaml`, `WebApp_AWS.yaml`
+
+Eu preparei os arquivos completos, eles são inteligentes e só serão executados quando houver uma alteração na pasta do respectivo serviço.
+
+
+#### 2. AZURE
+
+> [!NOTE]
+> Esta sessão descreve um pipeline completo e robusto usando `GitHub Actions` que consome serviços `AZURE`.
+
+A estratégia deste pipeline é:
+- **Contêineres**: Usar o `Azure Container Apps`, o serviço moderno e sem servidor do `Azure` para `contêineres` que é o equivalente ao `AWS Fargate`.
+- **Banco de Dados**: Usar o `Azure SQL Database`, o serviço gerido para `SQL Server`.
+- **Mensageria**: Usar o `Azure Service Bus`, o serviço de mensageria nativo e robusto do `Azure`, ou manter o `RabbitMQ` rodando como outro contêiner no `Azure Container Apps`. Para este pipeline, mantenh o `RabbitMQ` para não alterar o código da aplicação.
+- **Frontend**: Usar o `Azure Static Web Apps`, que é otimizado para hospedar frontends estáticos como o `Blazor WebAssembly` e integrá-los com `APIs`.
+
+
+### Fase 1: Preparando a Pista de Pouso no Azure (Configuração Única)
+> Antes de rodar o pipeline, precisamos configurar os serviços no portal do `Azure`.
+
+
+|Passo  	     | Ação no Portal Azure	                   | Propósito                   |
+|----------------|-------------------------------|-----------------------------|
+|1. Grupo de Recursos|Crie um novo Grupo de Recursos (`Resource Group`). Ex: `rg-insurance-platform`.|É uma "pasta" lógica no Azure para organizar todos os recursos do nosso projeto.|
+|2. Registo de Contêiner|Crie um Registo de Contêiner do Azure (`Azure Container Registry - ACR`). Ex: `acrinsuranceplatform`.|O nosso "depósito" privado no Azure para guardar as imagens Docker.|
+|3. Banco de Dados|Crie um Banco de Dados SQL do Azure (`Azure SQL Database`). Durante a criação, será criado também um servidor SQL. Guarde o nome do servidor, o nome da base de dados, o utilizador e a senha.|O nosso serviço de SQL Server totalmente gerenciado.|
+|4. Ambiente de Contêiner	|Crie um Ambiente do Azure Container Apps (`Azure Container Apps Environment`).	|É a rede privada e segura onde os nossos contêineres irão comunicar entre si.|
+|5. Aplicações de Contêiner|No ambiente que acabou de criar, crie três Aplicações de Contêiner (Container Apps): `propostaservice`, `contratacaoservice` e `rabbitmq`. Configure-os para usar uma imagem inicial qualquer (será substituída pelo pipeline) e defina as variáveis de ambiente necessárias (como a `SA_PASSWORD` para o `RabbitMQ`).|Estes são os serviços que irão executar os nossos contêineres de backend e de mensageria.|
+|6. Aplicação Web Estática	|Crie uma Aplicação Web Estática (`Static Web App`). Ligue-a ao seu repositório `GitHub`, mas na seção de "`Build`", escolha a opção "`Personalizado`" (`Custom`), pois o nosso `Blazor` é `standalone`.|Este serviço irá hospedar a nossa interface de utilizador (`Blazor`) e distribuí-la globalmente.|
+|7. "Robô" de Automação	|No `Azure Active Directory` > `Registos de aplicações`, crie uma nova `Entidade de Serviço `(`Service Principal`). Atribua a ela a função de "`Colaborador`" (`Contributor`) no seu Grupo de Recursos. Guarde o `clientId`, `clientSecret` e `tenantId`.|Este será o nosso "robô" para o GitHub Actions se autenticar no `Azure`.|
+
+
+### Fase 2: Configurando os Segredos no GitHub
+> [!IMPORTANT]
+> **NUNCA** coloque suas chaves da AZURE diretamente no código, para isso, usar o gerenciador de segredos do GitHub.
+
+
+1. Vá ao seu repositório/fork no `GitHub` > "`Settings`" > "`Secrets and variables`" > "`Actions`".
+2. Clique em "`New repository secret`" e crie os seguintes segredos:
+   - Nome: `AZURE_CREDENTIALS`
+   - Valor: Cole o JSON completo da sua Entidade de Serviço (o Azure CLI gera isto para si com o comando az ad sp create-for-rbac).
+   - Nome: `ACR_USERNAME`
+   - Valor: O `clientId` da sua Entidade de Serviço.
+   - Nome: `ACR_PASSWORD`
+   - Valor: O `clientSecret` da sua Entidade de Serviço.
+
+
+
+### Fase 3: Os Arquivos de Pipeline (Workflows)
+> A melhor prática para um monorepo é ter um arquivo de workflow para cada serviço, assim, uma alteração no `PropostaService` não aciona o pipeline do `WebApp`.
+
+Na raiz do projeto, há uma pasta chamada `.github` e, dentro dela, uma pasta chamada `workflows`. Três arquivos YAML foram gerados dentro de `.github/workflows`: `ContratacaoService_AZURE.yaml`, `PropostaService_AZURE.yaml`, `WebApp_AZURE.yaml`
+
+Eu preparei os arquivos completos, eles são inteligentes e só serão executados quando houver uma alteração na pasta do respectivo serviço.
+
+
+
+
 # :art: Screenshots
 <details>
 	<summary># 1. WebApp</summary>
