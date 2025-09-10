@@ -1,0 +1,54 @@
+# Nome do Pipeline
+name: Deploy PropostaService
+
+# Gatilho: Executa este pipeline sempre que houver um push na branch 'main'
+# E APENAS se houver alterações na pasta do PropostaService.
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'PropostaService.Api/**'
+      - 'PropostaService.Application/**'
+      - 'PropostaService.Domain/**'
+      - 'PropostaService.Infrastructure/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v3
+
+    - name: Configurar AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1 # Mude para a sua região AWS
+
+    - name: Fazer login no Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Construir, Taggear e Enviar imagem para o ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: propostaservice # O nome do repositório que você criou no ECR
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f PropostaService.Api/Dockerfile .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Executar os testes unitários
+      run: dotnet test --filter "FullyQualifiedName~PropostaService"
+
+    - name: Fazer deploy da nova imagem no Amazon ECS
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: propostaservice-task-definition # Nome da sua Task Definition no ECS
+        service: propostaservice-service # Nome do seu Serviço no ECS
+        cluster: insurance-cluster # Nome do seu Cluster no ECS
+        wait-for-service-stability: true

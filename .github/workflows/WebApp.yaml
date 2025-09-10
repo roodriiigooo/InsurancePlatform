@@ -1,0 +1,40 @@
+# Nome do Pipeline
+name: Deploy WebApp
+
+# Gatilho: Apenas para alterações na WebApp
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'InsurancePlatform.WebApp/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v3
+
+    - name: Configurar .NET 8
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.x'
+
+    - name: Publicar a WebApp
+      run: dotnet publish InsurancePlatform.WebApp/InsurancePlatform.WebApp.csproj --configuration Release
+
+    - name: Configurar AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1 # Mude para a sua região AWS
+
+    - name: Fazer deploy dos arquivos para o S3
+      run: |
+        aws s3 sync ./InsurancePlatform.WebApp/bin/Release/net8.0/publish/wwwroot s3://seu-bucket-name # Mude para o nome do seu bucket S3
+
+    - name: Invalidar cache do CloudFront
+      run: |
+        aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*" # Mude para o ID da sua distribuição CloudFront
