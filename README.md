@@ -48,42 +48,61 @@ A solução é composta por uma aplicação web e dois microserviços de backend
 O diagrama abaixo ilustra a interação entre todos os componentes do sistema, representando a arquitetura final:
 
 ```mermaid
----
-config:
-  layout: elk
----
-flowchart TD
- subgraph subGraph0["Cliente (Swagger / Postman / WebApp)"]
+graph TD
+    subgraph "Cliente (Swagger / Postman / WebApp)"
         User["Usuário"]
-  end
- subgraph PropostaService["PropostaService (Porta 8080)"]
-        Controller["API REST <br> PropostasController"]
-        Mediator["MediatR"]
+    end
+
+    subgraph PropostaService ["PropostaService (Porta 8080)"]
+        style PropostaService fill:#e3f2fd,stroke:#333,stroke-width:2px
+        Controller_P["API REST <br> PropostasController"]
+        Mediator_P["MediatR"]
         Commands["Handlers de Comando <br> Criar, Aprovar, etc. <br> Usando EF Core"]
-        Queries["Handlers de Query <br> Listar <br> Usando Dapper"]
+        Queries_P["Handlers de Query <br> Listar <br> Usando Dapper"]
         Publisher["Publicador de Eventos <br> MassTransit"]
-  end
- subgraph ContratacaoService["ContratacaoService (Worker)"]
+        
+        Controller_P -- Envia Command/Query --> Mediator_P
+        Mediator_P --> Commands
+        Mediator_P --> Queries_P
+        Commands -- Dispara Evento --> Publisher
+    end
+
+    subgraph ContratacaoService ["ContratacaoService (Worker e API)"]
+        style ContratacaoService fill:#e8f5e9,stroke:#333,stroke-width:2px
+        
+        %% Adicionando o fluxo de API que faltava %%
+        Controller_C["API REST <br> ContratacoesController"]
+        Mediator_C["MediatR"]
+        Queries_C["Handlers de Query <br> (Listar) <br> Usando Dapper"]
+        
+        %% Componentes de Worker existentes %%
         Consumer["Consumidor de Eventos <br> MassTransit"]
         Logic["Lógica de Contratação <br> Usando EF Core"]
-  end
- subgraph Infra["Infraestrutura Compartilhada"]
+        
+        Controller_C -- Envia Query --> Mediator_C
+        Mediator_C --> Queries_C
+        Consumer --> Logic
+    end
+    
+    subgraph Infra ["Infraestrutura Compartilhada"]
+        style Infra fill:#fbe9e7,stroke:#333,stroke-width:2px
         DB[("SQL Server DB")]
         RabbitMQ["RabbitMQ <br> Fila: contratacao-queue"]
-  end
-    Controller -- Envia Command/Query --> Mediator
-    Mediator --> Commands & Queries
-    Commands -- Dispara Evento --> Publisher
-    Consumer --> Logic
-    User -- Requisição HTTP --> Controller
+    end
+    
+    %% Conexões do Cliente %%
+    User -- Requisição HTTP para Propostas --> Controller_P
+    User -- Requisição HTTP para Contratações --> Controller_C
+
+    %% Conexões do PropostaService %%
     Commands -- Salva/Altera Proposta --> DB
-    Queries -- Lê Propostas --> DB
+    Queries_P -- Lê Propostas --> DB
     Publisher -- Publica Mensagem --> RabbitMQ
+    
+    %% Conexões do ContratacaoService %%
     RabbitMQ -- Entrega Mensagem --> Consumer
     Logic -- Salva Contratação --> DB
-    style PropostaService fill:#e3f2fd,stroke:#333,stroke-width:2px
-    style ContratacaoService fill:#e8f5e9,stroke:#333,stroke-width:2px
-    style Infra fill:#fbe9e7,stroke:#333,stroke-width:2px
+    Queries_C -- Lê Contratações --> DB
 ```
 
 <details>
