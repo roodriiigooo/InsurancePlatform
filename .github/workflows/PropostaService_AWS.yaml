@@ -1,15 +1,16 @@
 # Nome do Pipeline
-name: Deploy ContratacaoService
+name: Deploy PropostaServiceAWS
 
-# Gatilho: Apenas para alterações no ContratacaoService
+# Gatilho: Executa este pipeline sempre que houver um push na branch 'main'
+# E APENAS se houver alterações na pasta do PropostaService.
 on:
   push:
     branches: [ "main" ]
     paths:
-      - 'ContratacaoService.Api/**'
-      - 'ContratacaoService.Application/**'
-      - 'ContratacaoService.Domain/**'
-      - 'ContratacaoService.Infrastructure/**'
+      - 'PropostaService.Api/**'
+      - 'PropostaService.Application/**'
+      - 'PropostaService.Domain/**'
+      - 'PropostaService.Infrastructure/**'
 
 jobs:
   build-and-deploy:
@@ -34,20 +35,20 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: contratacaoservice # O nome do repositório que você criou no ECR
+        ECR_REPOSITORY: propostaservice # O nome do repositório que você criou no ECR
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f ContratacaoService.Api/Dockerfile .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f PropostaService.Api/Dockerfile .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
     - name: Executar os testes unitários
-      run: dotnet test --filter "FullyQualifiedName~ContratacaoService"
+      run: dotnet test --filter "FullyQualifiedName~PropostaService"
 
     - name: Fazer deploy da nova imagem no Amazon ECS
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
-        task-definition: contratacaoservice-task-definition # Nome da sua Task Definition no ECS
-        service: contratacaoservice-service # Nome do seu Serviço no ECS
+        task-definition: propostaservice-task-definition # Nome da sua Task Definition no ECS
+        service: propostaservice-service # Nome do seu Serviço no ECS
         cluster: insurance-cluster # Nome do seu Cluster no ECS
         wait-for-service-stability: true

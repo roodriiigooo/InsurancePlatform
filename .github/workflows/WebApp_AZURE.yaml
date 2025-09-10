@@ -1,0 +1,26 @@
+# Nome do Pipeline
+name: Deploy WebApp to Azure Static Web Apps
+
+# Gatilho: Apenas para alterações na WebApp
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'InsurancePlatform.WebApp/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v2
+
+    - name: Construir e Fazer Deploy na Azure Static Web App
+      uses: Azure/static-web-apps-deploy@v1
+      with:
+        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_XYZ }} # Obtenha este token nas definições da sua Static Web App
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        action: "upload"
+        app_location: "InsurancePlatform.WebApp" # Pasta do projeto Blazor
+        output_location: "wwwroot" # Pasta de saída para Blazor WASM standalone

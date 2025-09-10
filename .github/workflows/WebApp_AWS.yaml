@@ -1,5 +1,5 @@
 # Nome do Pipeline
-name: Deploy WebApp
+name: Deploy WebAppAWS
 
 # Gatilho: Apenas para alterações na WebApp
 on:

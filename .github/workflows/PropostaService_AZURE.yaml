@@ -1,0 +1,47 @@
+# Nome do Pipeline
+name: Deploy PropostaService to Azure
+
+# Gatilho: Apenas para alterações no PropostaService
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'PropostaService.Api/**'
+      - 'PropostaService.Application/**'
+      - 'PropostaService.Domain/**'
+      - 'PropostaService.Infrastructure/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v3
+
+    - name: Autenticar no Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Autenticar no Azure Container Registry (ACR)
+      uses: azure/docker-login@v1
+      with:
+        login-server: acrinsuranceplatform.azurecr.io # Mude para o nome do seu ACR
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Construir e Enviar imagem para o ACR
+      run: |
+        docker build -t acrinsuranceplatform.azurecr.io/propostaservice:${{ github.sha }} -f PropostaService.Api/Dockerfile .
+        docker push acrinsuranceplatform.azurecr.io/propostaservice:${{ github.sha }}
+
+    - name: Executar os testes unitários
+      run: dotnet test --filter "FullyQualifiedName~PropostaService"
+
+    - name: Fazer deploy da nova imagem no Azure Container Apps
+      uses: azure/container-apps-deploy-action@v1
+      with:
+        imageToDeploy: acrinsuranceplatform.azurecr.io/propostaservice:${{ github.sha }}
+        appName: propostaservice # Nome da sua Container App
+        resourceGroup: rg-insurance-platform # Nome do seu Grupo de Recursos
